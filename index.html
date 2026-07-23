@@ -194,6 +194,74 @@
     line-height:1.5;
   }
   .panel-actions{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+
+  /* Chat assistant */
+  .chat-panel{
+    background:var(--olive-dark);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+  }
+  .chat-panel h2{font-size:14px;color:var(--khaki);margin:0 0 10px;}
+  .chat-log{
+    background:#00000030;
+    border-radius:var(--radius);
+    padding:10px;
+    height:220px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .chat-msg{
+    font-size:12.5px;
+    line-height:1.45;
+    padding:7px 10px;
+    border-radius:var(--radius);
+    max-width:90%;
+  }
+  .chat-msg.bot{
+    background:var(--olive);
+    color:var(--paper);
+    align-self:flex-start;
+  }
+  .chat-msg.user{
+    background:var(--armygreen);
+    color:var(--ink);
+    align-self:flex-end;
+  }
+  .chat-input-row{
+    display:flex;
+    gap:8px;
+  }
+  .chat-input-row input{
+    flex:1;
+    background:#00000030;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    color:var(--paper);
+    font-family:inherit;
+    font-size:12.5px;
+    padding:8px 10px;
+  }
+  .chat-input-row input:focus{outline:1px solid var(--khaki);}
+  .chat-input-row button{
+    font-family:'Oswald',sans-serif;
+    letter-spacing:.08em;
+    font-size:12px;
+    padding:0 14px;
+    border-radius:var(--radius);
+    border:1px solid var(--armygreen)88;
+    background:transparent;
+    color:var(--armygreen);
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  .chat-input-row button:hover{background:var(--armygreen)22;}
   button.action{
     font-family:'Oswald',sans-serif;
     letter-spacing:.08em;
@@ -435,6 +503,12 @@ const VEHICLES = {
 let currentVehicle = null;
 let state = {}; // { itemId: bool }
 let collapsedCats = {};
+let chatHistory = {}; // { vehicleKey: [{role:'bot'|'user', text}] }
+
+function greetingFor(key){
+  const v = VEHICLES[key];
+  return "Welcome to PMCS Assistant. You've selected the "+v.designation+" ("+v.fullname+"). Ask me things like \"what's left\", \"deadline items\", \"status\", or ask about a specific part like \"brakes\" or \"tires\".";
+}
 
 function itemId(catIdx, itemIdx){ return currentVehicle+"-"+catIdx+"-"+itemIdx; }
 function storageKey(v){ return "pmcs_"+v; }
@@ -466,6 +540,9 @@ function selectVehicle(key){
   currentVehicle = key;
   state = loadState(key);
   collapsedCats = {};
+  if(!chatHistory[key]){
+    chatHistory[key] = [{role:'bot', text:greetingFor(key)}];
+  }
   renderVehicleRow();
   renderContent();
 }
@@ -552,6 +629,14 @@ function renderContent(){
           <button class="action export" onclick="exportReport()">EXPORT REPORT</button>
         </div>
         <div class="critical-note">🚩 DEADLINE items are safety/mission-critical. Any unchecked DEADLINE item marks the vehicle NMC.</div>
+        <div class="chat-panel">
+          <h2>💬 PMCS ASSISTANT</h2>
+          <div class="chat-log" id="chatLog"></div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="Ask about this checklist..." onkeydown="if(event.key==='Enter')sendChat();">
+            <button onclick="sendChat()">SEND</button>
+          </div>
+        </div>
       </div>
       <div class="checklist-panel">
         <h2>📝 PMCS CHECKLIST</h2>
@@ -559,6 +644,77 @@ function renderContent(){
         ${catsHtml}
       </div>
     </div>`;
+
+  renderChatLog();
+}
+
+function renderChatLog(){
+  const log = document.getElementById('chatLog');
+  if(!log) return;
+  const hist = chatHistory[currentVehicle] || [];
+  log.innerHTML = hist.map(m=>`<div class="chat-msg ${m.role}">${m.text}</div>`).join('');
+  log.scrollTop = log.scrollHeight;
+}
+
+function sendChat(){
+  const input = document.getElementById('chatInput');
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text || !currentVehicle) return;
+  chatHistory[currentVehicle].push({role:'user', text: escapeHtml(text)});
+  const reply = generateReply(currentVehicle, text);
+  chatHistory[currentVehicle].push({role:'bot', text: reply});
+  input.value = '';
+  renderChatLog();
+  input.focus();
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function generateReply(key, rawQuery){
+  const v = VEHICLES[key];
+  const q = rawQuery.toLowerCase();
+  const flat = [];
+  v.categories.forEach((cat,ci)=>{
+    cat.items.forEach((it,ii)=>{
+      flat.push({cat:cat.name, ci, ii, text:it.t, critical:!!it.c, checked:!!state[itemId(ci,ii)]});
+    });
+  });
+
+  if(/status|fmc|pmc|nmc|mission capable/.test(q)){
+    const s = computeStatus();
+    return "Current status: <strong>"+s.code+"</strong> — "+s.meaning+" ("+s.done+"/"+s.total+" items complete.)";
+  }
+
+  if(/deadline|critical|safety/.test(q)){
+    const crit = flat.filter(i=>i.critical);
+    const open = crit.filter(i=>!i.checked);
+    if(open.length===0) return "All "+crit.length+" DEADLINE items on the "+v.designation+" are checked off.";
+    return "There "+(open.length===1?"is":"are")+" "+open.length+" open DEADLINE item"+(open.length===1?"":"s")+": "+open.map(i=>i.text).slice(0,6).join('; ')+(open.length>6?"; …":"");
+  }
+
+  if(/left|remain|incomplete|not done|what.?s left|todo|to do/.test(q)){
+    const open = flat.filter(i=>!i.checked);
+    if(open.length===0) return "Nothing left — every item on the "+v.designation+" checklist is complete.";
+    return open.length+" item"+(open.length===1?"":"s")+" remaining: "+open.slice(0,6).map(i=>i.text).join('; ')+(open.length>6?"; …":"");
+  }
+
+  if(/categor|section|group/.test(q)){
+    return "The "+v.designation+" checklist is organized into: "+v.categories.map(c=>c.name).join(', ')+".";
+  }
+
+  // keyword search against item text
+  const words = q.replace(/[^a-z0-9 ]/g,'').split(' ').filter(w=>w.length>2);
+  const matches = flat.filter(i=> words.some(w=> i.text.toLowerCase().includes(w)) );
+  if(matches.length>0){
+    return matches.slice(0,5).map(i=>
+      (i.checked ? "✓ " : "☐ ") + i.text + (i.critical ? " (DEADLINE)" : "") + " — "+i.cat
+    ).join('<br>');
+  }
+
+  return "I couldn't match that to a specific checklist item for the "+v.designation+". Try asking about \"status\", \"deadline items\", \"what's left\", or a part like \"oil\", \"tires\", or \"lights\".";
 }
 
 function toggleItem(ci, ii){
