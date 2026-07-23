@@ -1,154 +1,618 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vehicle Maintenance Guide - PMCS Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMCS Dashboard — Vehicle Maintenance Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --olive-dark:#242a1f;
+    --olive:#3d4a35;
+    --olive-light:#5c6b4f;
+    --khaki:#c2b280;
+    --paper:#e8e4d8;
+    --ink:#1a1d16;
+    --amber:#e8a33d;
+    --rust:#a13d2f;
+    --green-ok:#5a8f4a;
+    --border:#5c6b4f55;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'IBM Plex Mono',monospace;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+
+  /* Masthead */
+  .masthead{
+    background:repeating-linear-gradient(135deg,var(--olive-dark),var(--olive-dark) 10px,#20251b 10px,#20251b 20px);
+    border-bottom:3px solid var(--amber);
+    padding:6px 0;
+    text-align:center;
+    font-size:11px;
+    letter-spacing:0.25em;
+    color:var(--amber);
+  }
+  header.title-block{
+    padding:28px 20px 18px;
+    text-align:center;
+    border-bottom:1px solid var(--border);
+  }
+  header.title-block h1{
+    font-size:clamp(24px,4vw,38px);
+    margin:0 0 6px;
+    color:var(--paper);
+  }
+  header.title-block .sub{
+    color:var(--khaki);
+    font-size:12px;
+    letter-spacing:0.15em;
+  }
+
+  main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px 20px 60px;
+  }
+
+  /* Vehicle selector */
+  .selector-label{
+    font-size:12px;
+    color:var(--khaki);
+    letter-spacing:0.2em;
+    margin-bottom:10px;
+  }
+  .vehicle-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .vehicle-card{
+    background:var(--olive-dark);
+    border:2px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    cursor:pointer;
+    text-align:left;
+    color:var(--paper);
+    font-family:inherit;
+    transition:border-color .15s ease, transform .1s ease, background .15s ease;
+    position:relative;
+    overflow:hidden;
+  }
+  .vehicle-card:hover{border-color:var(--khaki);}
+  .vehicle-card:active{transform:scale(0.99);}
+  .vehicle-card.active{
+    border-color:var(--amber);
+    background:#2f3826;
+  }
+  .vehicle-card.active::after{
+    content:"SELECTED";
+    position:absolute;
+    top:8px;
+    right:-28px;
+    background:var(--amber);
+    color:var(--ink);
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:.15em;
+    padding:2px 30px;
+    transform:rotate(35deg);
+  }
+  .vehicle-card .designation{
+    font-family:'Oswald',sans-serif;
+    font-size:20px;
+    letter-spacing:.03em;
+  }
+  .vehicle-card .fullname{
+    color:var(--khaki);
+    font-size:11.5px;
+    margin-top:4px;
+    line-height:1.4;
+  }
+
+  /* Empty state */
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--khaki);
+    border:1px dashed var(--border);
+    border-radius:var(--radius);
+  }
+  .empty-state .icon{font-size:32px;margin-bottom:10px;}
+
+  /* Dashboard grid once a vehicle is picked */
+  .dashboard{
+    display:grid;
+    grid-template-columns:260px 1fr;
+    gap:20px;
+  }
+  @media (max-width:720px){
+    .dashboard{grid-template-columns:1fr;}
+  }
+
+  .status-panel{
+    background:var(--olive-dark);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    align-self:start;
+    position:sticky;
+    top:16px;
+  }
+  .status-panel h2{font-size:14px;color:var(--khaki);margin:0 0 14px;}
+  .gauge-wrap{text-align:center;margin-bottom:10px;}
+  .status-code{
+    display:inline-block;
+    font-family:'Oswald',sans-serif;
+    font-size:26px;
+    letter-spacing:.05em;
+    padding:4px 14px;
+    border-radius:var(--radius);
+    margin-top:4px;
+  }
+  .status-code.FMC{background:var(--green-ok);color:var(--ink);}
+  .status-code.PMC{background:var(--amber);color:var(--ink);}
+  .status-code.NMC{background:var(--rust);color:var(--paper);}
+  .status-meaning{font-size:10.5px;color:var(--khaki);margin-top:6px;line-height:1.4;}
+  .count-line{
+    font-size:13px;
+    margin:14px 0 4px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .progress-track{
+    background:#00000055;
+    border-radius:20px;
+    height:8px;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--amber);
+    transition:width .2s ease;
+  }
+  .critical-note{
+    font-size:10.5px;
+    color:var(--rust);
+    border-top:1px solid var(--border);
+    margin-top:12px;
+    padding-top:10px;
+    line-height:1.5;
+  }
+  .panel-actions{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+  button.action{
+    font-family:'Oswald',sans-serif;
+    letter-spacing:.08em;
+    font-size:12px;
+    padding:9px 10px;
+    border-radius:var(--radius);
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--paper);
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  button.action:hover{border-color:var(--khaki);background:#00000030;}
+  button.action.reset{color:var(--rust);border-color:var(--rust)66;}
+  button.action.reset:hover{background:var(--rust)22;}
+  button.action.export{color:var(--amber);border-color:var(--amber)66;}
+  button.action.export:hover{background:var(--amber)22;}
+
+  /* Checklist */
+  .checklist-panel h2{font-size:14px;color:var(--khaki);margin:0 0 4px;}
+  .checklist-panel .vehicle-heading{
+    font-size:20px;
+    color:var(--paper);
+    margin-bottom:16px;
+  }
+  .category{
+    margin-bottom:18px;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .category-head{
+    background:var(--olive);
+    padding:9px 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    user-select:none;
+  }
+  .category-head .cat-title{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    letter-spacing:.1em;
+  }
+  .category-head .cat-count{
+    font-size:11px;
+    color:var(--khaki);
+  }
+  .category-body{
+    background:#1e2219;
+  }
+  .category.collapsed .category-body{display:none;}
+  .category-head .chevron{transition:transform .15s ease;font-size:12px;color:var(--khaki);}
+  .category.collapsed .chevron{transform:rotate(-90deg);}
+
+  .item-row{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:10px 14px;
+    border-top:1px solid #ffffff0d;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .item-row:hover{background:#ffffff08;}
+  .item-row input[type=checkbox]{
+    margin-top:2px;
+    width:16px;height:16px;
+    accent-color:var(--amber);
+    flex-shrink:0;
+  }
+  .item-row.checked .item-text{
+    color:var(--khaki);
+    text-decoration:line-through;
+    text-decoration-color:var(--khaki)99;
+  }
+  .item-text{flex:1;line-height:1.4;}
+  .flag{
+    font-size:9px;
+    background:var(--rust);
+    color:var(--paper);
+    padding:1px 6px;
+    border-radius:10px;
+    letter-spacing:.05em;
+    flex-shrink:0;
+    margin-top:1px;
+  }
+
+  footer{
+    text-align:center;
+    padding:20px;
+    font-size:10px;
+    color:var(--khaki);
+    letter-spacing:.15em;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-left">
-                <span class="label">VEHICLE MAINTENANCE</span>
-                <span class="label">PMCS GUIDE</span>
-            </div>
-            <div class="header-right">
-                <span class="label">UNCLASSIFIED // FOR TRAINING USE ONLY</span>
-            </div>
-        </header>
 
-        <div class="main-content">
-            <!-- Left Sidebar: Vehicle Selection & Chat -->
-            <aside class="sidebar left-sidebar">
-                <div class="panel">
-                    <div class="panel-header">🎯 VEHICLE SELECTION</div>
-                    <div class="vehicle-selector">
-                        <button class="vehicle-btn" data-vehicle="LMTV">
-                            <span class="vehicle-name">LMTV</span>
-                            <span class="vehicle-desc">Light Medium Tactical</span>
-                        </button>
-                        <button class="vehicle-btn" data-vehicle="HMMWV">
-                            <span class="vehicle-name">HMMWV</span>
-                            <span class="vehicle-desc">High Mobility Multi-Purpose</span>
-                        </button>
-                        <button class="vehicle-btn" data-vehicle="MATV">
-                            <span class="vehicle-name">MATV</span>
-                            <span class="vehicle-desc">Mobility Tactical Vehicle</span>
-                        </button>
-                    </div>
-                </div>
+<div class="masthead">UNCLASSIFIED // FOR TRAINING USE ONLY</div>
+<header class="title-block">
+  <h1>PMCS Dashboard</h1>
+  <div class="sub">Preventive Maintenance Checks &amp; Services — Vehicle Maintenance Guide</div>
+</header>
 
-                <div class="panel">
-                    <div class="panel-header">💬 PMCS ASSISTANT</div>
-                    <div class="chat-container">
-                        <div class="chat-messages" id="chatMessages">
-                            <div class="message system">
-                                Welcome to PMCS Assistant. Select a vehicle and ask questions about maintenance procedures.
-                            </div>
-                        </div>
-                        <div class="chat-input-area">
-                            <input type="text" id="chatInput" placeholder="Type a message..." class="chat-input">
-                            <button id="sendBtn" class="send-btn">SEND</button>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+<main>
+  <div class="selector-label">🎯 SELECT VEHICLE TYPE</div>
+  <div class="vehicle-row" id="vehicleRow"></div>
 
-            <!-- Center: Checklist -->
-            <main class="main-panel">
-                <div class="panel">
-                    <div class="panel-header" id="vehicleHeader">
-                        🔧 SELECT A VEHICLE TO BEGIN
-                    </div>
-                    <div class="checklist-container" id="checklistContainer">
-                        <div class="placeholder">
-                            <p>Select a vehicle from the left panel to start your PMCS checklist.</p>
-                        </div>
-                    </div>
-                    <div class="checklist-footer">
-                        <button id="resetBtn" class="action-btn" style="display:none;">RESET CHECKLIST</button>
-                        <button id="exportBtn" class="action-btn" style="display:none;">EXPORT REPORT</button>
-                    </div>
-                </div>
-            </main>
+  <div id="content"></div>
+</main>
 
-            <!-- Right Sidebar: Status & Stats -->
-            <aside class="sidebar right-sidebar">
-                <div class="panel">
-                    <div class="panel-header">📊 INSPECTION STATUS</div>
-                    <div class="status-display" id="statusDisplay">
-                        <div class="status-item">
-                            <span class="status-label">Vehicle:</span>
-                            <span class="status-value">--</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Completed:</span>
-                            <span class="status-value" id="completedCount">0 / 10</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Progress:</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Status:</span>
-                            <span class="status-value" id="statusValue">READY</span>
-                        </div>
-                    </div>
-                </div>
+<footer>PMCS DASHBOARD — TRAINING REFERENCE ONLY — NOT A SUBSTITUTE FOR APPLICABLE TECHNICAL MANUALS</footer>
 
-                <div class="panel">
-                    <div class="panel-header">📝 INSPECTION ITEMS</div>
-                    <div class="items-legend">
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Headlights</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Taillights</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Brake Lights</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Turn Signals</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Hazard Lights</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Oil Level</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Fuel Level</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Transmission Fluid</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Coolant Level</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-check">✓</span>
-                            <span class="legend-text">Mileage</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+<script>
+const VEHICLES = {
+  hmmwv: {
+    designation:"HMMWV",
+    fullname:"M998 Series — High Mobility Multi-Purpose Wheeled Vehicle",
+    categories:[
+      {name:"Before Operation", items:[
+        {t:"Check ground/hull area for fuel, oil, or coolant leaks", c:true},
+        {t:"Check engine oil level (dipstick, engine off/level ground)"},
+        {t:"Check coolant level in recovery bottle"},
+        {t:"Check transmission fluid level (engine running, per TM)"},
+        {t:"Check power steering fluid level"},
+        {t:"Check brake fluid level (master cylinder)", c:true},
+        {t:"Inspect battery terminals for corrosion, secure hold-down"},
+        {t:"Inspect tires for wear, cuts, and correct pressure", c:true},
+        {t:"Check lug nuts for looseness or missing hardware", c:true},
+        {t:"Verify fire extinguisher present, charged, and pin intact"},
+        {t:"Check headlights, taillights, brake lights, and turn signals", c:true},
+        {t:"Inspect windshield for cracks; check wiper operation"},
+        {t:"Check mirrors are present and adjusted"},
+        {t:"Check seat belts for fraying and proper latch function", c:true},
+        {t:"Test horn"},
+        {t:"Check fuel level"},
+        {t:"Verify BII (Basic Issue Items) and data plates present"}
+      ]},
+      {name:"During Operation", items:[
+        {t:"Monitor gauges for normal oil pressure and temperature"},
+        {t:"Listen for unusual noises, vibration, or knocking"},
+        {t:"Check steering for excessive play or pulling"},
+        {t:"Check brake operation and pedal feel", c:true},
+        {t:"Confirm smooth transmission shifting"}
+      ]},
+      {name:"After Operation", items:[
+        {t:"Recheck for fluid leaks after shutdown", c:true},
+        {t:"Inspect lights for damage from operation"},
+        {t:"Inspect tires for new damage or embedded debris"},
+        {t:"Refuel vehicle at end of mission"},
+        {t:"Clean vehicle interior/exterior as required"},
+        {t:"Report all deficiencies on DA Form 2404/5988-E"}
+      ]}
+    ]
+  },
+  lmtv: {
+    designation:"LMTV",
+    fullname:"M1078 Series — Light Medium Tactical Vehicle",
+    categories:[
+      {name:"Before Operation", items:[
+        {t:"Check ground/hull area for fuel, oil, or coolant leaks", c:true},
+        {t:"Check engine oil level"},
+        {t:"Check coolant level in overflow tank"},
+        {t:"Check Allison automatic transmission fluid level"},
+        {t:"Drain air tanks; check for moisture/contamination", c:true},
+        {t:"Check air brake system builds to normal pressure", c:true},
+        {t:"Check Central Tire Inflation System (CTIS) for leaks/faults"},
+        {t:"Inspect tires for wear, cuts, and correct CTIS pressure setting", c:true},
+        {t:"Inspect fifth wheel / pintle hook and safety chains"},
+        {t:"Check winch cable and mount (if equipped)"},
+        {t:"Inspect cargo bed, tailgate, and troop seats"},
+        {t:"Check headlights, taillights, blackout lights, and turn signals", c:true},
+        {t:"Check mirrors and windshield wipers"},
+        {t:"Check seat belts and cab restraints", c:true},
+        {t:"Verify fire extinguisher present and charged"},
+        {t:"Check fuel level"},
+        {t:"Verify BII and data plates present"}
+      ]},
+      {name:"During Operation", items:[
+        {t:"Monitor air pressure gauges during driving", c:true},
+        {t:"Confirm CTIS responds correctly to terrain selection"},
+        {t:"Monitor transmission temperature and shift quality"},
+        {t:"Listen for unusual drivetrain or PTO noise"},
+        {t:"Check brake pedal feel and stopping performance", c:true}
+      ]},
+      {name:"After Operation", items:[
+        {t:"Recheck for fluid and air leaks after shutdown", c:true},
+        {t:"Return CTIS to highway pressure setting"},
+        {t:"Drain air tanks again if moisture present"},
+        {t:"Secure winch cable and cargo tie-downs"},
+        {t:"Refuel vehicle at end of mission"},
+        {t:"Report all deficiencies on DA Form 2404/5988-E"}
+      ]}
+    ]
+  },
+  matv: {
+    designation:"M-ATV",
+    fullname:"Mine-Resistant Ambush Protected All-Terrain Vehicle",
+    categories:[
+      {name:"Before Operation", items:[
+        {t:"Check ground/hull area for fuel, oil, or coolant leaks", c:true},
+        {t:"Inspect underbody and armor panels for damage or looseness", c:true},
+        {t:"Check engine oil and coolant levels"},
+        {t:"Check independent suspension components for leaks or damage"},
+        {t:"Check CTIS and run-flat tire inserts", c:true},
+        {t:"Inspect gunner's turret/hatch for smooth operation and locks", c:true},
+        {t:"Verify fire suppression system armed and indicator normal", c:true},
+        {t:"Check winch cable and mount (if equipped)"},
+        {t:"Inspect blast-resistant seats and restraint harnesses", c:true},
+        {t:"Check vision blocks and periscopes for cracks/clarity"},
+        {t:"Check communications equipment power and mounts"},
+        {t:"Check headlights, blackout drive lights, and turn signals", c:true},
+        {t:"Check mirrors and windshield condition"},
+        {t:"Verify fire extinguisher present and charged"},
+        {t:"Check fuel level"},
+        {t:"Verify BII and data plates present"}
+      ]},
+      {name:"During Operation", items:[
+        {t:"Confirm turret rotates and locks smoothly", c:true},
+        {t:"Monitor engine temperature under load"},
+        {t:"Check independent suspension response over rough terrain"},
+        {t:"Listen for unusual driveline or brake noise", c:true},
+        {t:"Monitor CTIS pressure warnings"}
+      ]},
+      {name:"After Operation", items:[
+        {t:"Recheck for fluid leaks after shutdown", c:true},
+        {t:"Stow and lock turret/hatch", c:true},
+        {t:"Secure all weapons and equipment"},
+        {t:"Inspect run-flat tires and armor for mission damage"},
+        {t:"Refuel vehicle at end of mission"},
+        {t:"Report all deficiencies on DA Form 2404/5988-E"}
+      ]}
+    ]
+  }
+};
+
+let currentVehicle = null;
+let state = {}; // { itemId: bool }
+let collapsedCats = {};
+
+function itemId(catIdx, itemIdx){ return currentVehicle+"-"+catIdx+"-"+itemIdx; }
+function storageKey(v){ return "pmcs_"+v; }
+
+function loadState(v){
+  try{
+    const raw = localStorage.getItem(storageKey(v));
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+}
+function saveState(v){
+  try{ localStorage.setItem(storageKey(v), JSON.stringify(state)); }catch(e){}
+}
+
+function renderVehicleRow(){
+  const row = document.getElementById('vehicleRow');
+  row.innerHTML = '';
+  Object.keys(VEHICLES).forEach(key=>{
+    const v = VEHICLES[key];
+    const card = document.createElement('button');
+    card.className = 'vehicle-card' + (currentVehicle===key ? ' active' : '');
+    card.innerHTML = `<div class="designation">${v.designation}</div><div class="fullname">${v.fullname}</div>`;
+    card.onclick = ()=>selectVehicle(key);
+    row.appendChild(card);
+  });
+}
+
+function selectVehicle(key){
+  currentVehicle = key;
+  state = loadState(key);
+  collapsedCats = {};
+  renderVehicleRow();
+  renderContent();
+}
+
+function allItemsFlat(){
+  const v = VEHICLES[currentVehicle];
+  const flat = [];
+  v.categories.forEach((cat,ci)=>{
+    cat.items.forEach((it,ii)=>{
+      flat.push({id:itemId(ci,ii), critical:!!it.c, checked:!!state[itemId(ci,ii)]});
+    });
+  });
+  return flat;
+}
+
+function computeStatus(){
+  const flat = allItemsFlat();
+  const total = flat.length;
+  const done = flat.filter(i=>i.checked).length;
+  const criticalUnchecked = flat.some(i=>i.critical && !i.checked);
+  let code, meaning;
+  if(done === total){
+    code = 'FMC'; meaning = 'Fully Mission Capable — all checks complete.';
+  } else if(criticalUnchecked){
+    code = 'NMC'; meaning = 'Not Mission Capable — one or more deadline-critical items are incomplete.';
+  } else {
+    code = 'PMC'; meaning = 'Partially Mission Capable — non-critical items remain, no deadline faults.';
+  }
+  return {total,done,code,meaning};
+}
+
+function renderContent(){
+  const content = document.getElementById('content');
+  if(!currentVehicle){
+    content.innerHTML = `<div class="empty-state">
+      <div class="icon">🔧</div>
+      <div>SELECT A VEHICLE ABOVE TO BEGIN ITS PMCS CHECKLIST.</div>
+    </div>`;
+    return;
+  }
+  const v = VEHICLES[currentVehicle];
+  const status = computeStatus();
+  const pct = status.total ? Math.round((status.done/status.total)*100) : 0;
+
+  let catsHtml = '';
+  v.categories.forEach((cat,ci)=>{
+    const catFlat = cat.items.map((it,ii)=>({it,ii}));
+    const catDone = catFlat.filter(({ii})=>state[itemId(ci,ii)]).length;
+    const collapsed = collapsedCats[ci] ? 'collapsed' : '';
+    let itemsHtml = '';
+    cat.items.forEach((it,ii)=>{
+      const id = itemId(ci,ii);
+      const checked = !!state[id];
+      itemsHtml += `
+        <label class="item-row ${checked?'checked':''}" data-cat="${ci}" data-item="${ii}">
+          <input type="checkbox" ${checked?'checked':''} onclick="toggleItem(${ci},${ii})">
+          <span class="item-text">${it.t}</span>
+          ${it.c ? '<span class="flag">DEADLINE</span>' : ''}
+        </label>`;
+    });
+    catsHtml += `
+      <div class="category ${collapsed}" id="cat-${ci}">
+        <div class="category-head" onclick="toggleCategory(${ci})">
+          <span class="cat-title">${cat.name}</span>
+          <span class="cat-count">${catDone}/${cat.items.length} &nbsp;<span class="chevron">▾</span></span>
         </div>
-    </div>
+        <div class="category-body">${itemsHtml}</div>
+      </div>`;
+  });
 
-    <script src="script.js"></script>
+  content.innerHTML = `
+    <div class="dashboard">
+      <div class="status-panel">
+        <h2>📊 INSPECTION STATUS</h2>
+        <div class="gauge-wrap">
+          <div style="font-size:11px;color:var(--khaki);">${v.designation}</div>
+          <div class="status-code ${status.code}">${status.code}</div>
+          <div class="status-meaning">${status.meaning}</div>
+        </div>
+        <div class="count-line"><span>Completed</span><span>${status.done} / ${status.total}</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+        <div class="panel-actions">
+          <button class="action reset" onclick="resetChecklist()">RESET CHECKLIST</button>
+          <button class="action export" onclick="exportReport()">EXPORT REPORT</button>
+        </div>
+        <div class="critical-note">🚩 DEADLINE items are safety/mission-critical. Any unchecked DEADLINE item marks the vehicle NMC.</div>
+      </div>
+      <div class="checklist-panel">
+        <h2>📝 PMCS CHECKLIST</h2>
+        <div class="vehicle-heading">${v.designation} — ${v.fullname}</div>
+        ${catsHtml}
+      </div>
+    </div>`;
+}
+
+function toggleItem(ci, ii){
+  const id = itemId(ci,ii);
+  state[id] = !state[id];
+  saveState(currentVehicle);
+  renderContent();
+}
+
+function toggleCategory(ci){
+  collapsedCats[ci] = !collapsedCats[ci];
+  renderContent();
+}
+
+function resetChecklist(){
+  if(!currentVehicle) return;
+  if(!confirm('Reset the checklist for '+VEHICLES[currentVehicle].designation+'? This clears all checked items.')) return;
+  state = {};
+  saveState(currentVehicle);
+  renderContent();
+}
+
+function exportReport(){
+  if(!currentVehicle) return;
+  const v = VEHICLES[currentVehicle];
+  const status = computeStatus();
+  const now = new Date();
+  let lines = [];
+  lines.push('PMCS INSPECTION REPORT');
+  lines.push('Vehicle: '+v.designation+' — '+v.fullname);
+  lines.push('Date/Time: '+now.toLocaleString());
+  lines.push('Status: '+status.code+' ('+status.done+'/'+status.total+' complete)');
+  lines.push('');
+  v.categories.forEach((cat,ci)=>{
+    lines.push('== '+cat.name+' ==');
+    cat.items.forEach((it,ii)=>{
+      const checked = !!state[itemId(ci,ii)];
+      lines.push((checked?'[X] ':'[ ] ') + it.t + (it.c?' (DEADLINE)':''));
+    });
+    lines.push('');
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'PMCS_Report_'+v.designation+'_'+now.toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+renderVehicleRow();
+renderContent();
+</script>
 </body>
 </html>
