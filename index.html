@@ -14,7 +14,7 @@
     --khaki:#c2b280;
     --paper:#e8e4d8;
     --ink:#1a1d16;
-    --amber:#e8a33d;
+    --armygreen:#4ac76f;
     --rust:#a13d2f;
     --green-ok:#5a8f4a;
     --border:#5c6b4f55;
@@ -37,12 +37,12 @@
   /* Masthead */
   .masthead{
     background:repeating-linear-gradient(135deg,var(--olive-dark),var(--olive-dark) 10px,#20251b 10px,#20251b 20px);
-    border-bottom:3px solid var(--amber);
+    border-bottom:3px solid var(--armygreen);
     padding:6px 0;
     text-align:center;
     font-size:11px;
     letter-spacing:0.25em;
-    color:var(--amber);
+    color:var(--armygreen);
   }
   header.title-block{
     padding:28px 20px 18px;
@@ -95,7 +95,7 @@
   .vehicle-card:hover{border-color:var(--khaki);}
   .vehicle-card:active{transform:scale(0.99);}
   .vehicle-card.active{
-    border-color:var(--amber);
+    border-color:var(--armygreen);
     background:#2f3826;
   }
   .vehicle-card.active::after{
@@ -103,7 +103,7 @@
     position:absolute;
     top:8px;
     right:-28px;
-    background:var(--amber);
+    background:var(--armygreen);
     color:var(--ink);
     font-size:9px;
     font-weight:700;
@@ -164,7 +164,7 @@
     margin-top:4px;
   }
   .status-code.FMC{background:var(--green-ok);color:var(--ink);}
-  .status-code.PMC{background:var(--amber);color:var(--ink);}
+  .status-code.PMC{background:var(--armygreen);color:var(--ink);}
   .status-code.NMC{background:var(--rust);color:var(--paper);}
   .status-meaning{font-size:10.5px;color:var(--khaki);margin-top:6px;line-height:1.4;}
   .count-line{
@@ -182,7 +182,7 @@
   }
   .progress-fill{
     height:100%;
-    background:var(--amber);
+    background:var(--armygreen);
     transition:width .2s ease;
   }
   .critical-note{
@@ -209,8 +209,8 @@
   button.action:hover{border-color:var(--khaki);background:#00000030;}
   button.action.reset{color:var(--rust);border-color:var(--rust)66;}
   button.action.reset:hover{background:var(--rust)22;}
-  button.action.export{color:var(--amber);border-color:var(--amber)66;}
-  button.action.export:hover{background:var(--amber)22;}
+  button.action.export{color:var(--armygreen);border-color:var(--armygreen)66;}
+  button.action.export:hover{background:var(--armygreen)22;}
 
   /* Checklist */
   .checklist-panel h2{font-size:14px;color:var(--khaki);margin:0 0 4px;}
@@ -263,7 +263,7 @@
   .item-row input[type=checkbox]{
     margin-top:2px;
     width:16px;height:16px;
-    accent-color:var(--amber);
+    accent-color:var(--armygreen);
     flex-shrink:0;
   }
   .item-row.checked .item-text{
