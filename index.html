@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Maintenance Guide - PMCS Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <span class="label">VEHICLE MAINTENANCE</span>
+                <span class="label">PMCS GUIDE</span>
+            </div>
+            <div class="header-right">
+                <span class="label">UNCLASSIFIED // FOR TRAINING USE ONLY</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Sidebar: Vehicle Selection & Chat -->
+            <aside class="sidebar left-sidebar">
+                <div class="panel">
+                    <div class="panel-header">🎯 VEHICLE SELECTION</div>
+                    <div class="vehicle-selector">
+                        <button class="vehicle-btn" data-vehicle="LMTV">
+                            <span class="vehicle-name">LMTV</span>
+                            <span class="vehicle-desc">Light Medium Tactical</span>
+                        </button>
+                        <button class="vehicle-btn" data-vehicle="HMMWV">
+                            <span class="vehicle-name">HMMWV</span>
+                            <span class="vehicle-desc">High Mobility Multi-Purpose</span>
+                        </button>
+                        <button class="vehicle-btn" data-vehicle="MATV">
+                            <span class="vehicle-name">MATV</span>
+                            <span class="vehicle-desc">Mobility Tactical Vehicle</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">💬 PMCS ASSISTANT</div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message system">
+                                Welcome to PMCS Assistant. Select a vehicle and ask questions about maintenance procedures.
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chatInput" placeholder="Type a message..." class="chat-input">
+                            <button id="sendBtn" class="send-btn">SEND</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: Checklist -->
+            <main class="main-panel">
+                <div class="panel">
+                    <div class="panel-header" id="vehicleHeader">
+                        🔧 SELECT A VEHICLE TO BEGIN
+                    </div>
+                    <div class="checklist-container" id="checklistContainer">
+                        <div class="placeholder">
+                            <p>Select a vehicle from the left panel to start your PMCS checklist.</p>
+                        </div>
+                    </div>
+                    <div class="checklist-footer">
+                        <button id="resetBtn" class="action-btn" style="display:none;">RESET CHECKLIST</button>
+                        <button id="exportBtn" class="action-btn" style="display:none;">EXPORT REPORT</button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar: Status & Stats -->
+            <aside class="sidebar right-sidebar">
+                <div class="panel">
+                    <div class="panel-header">📊 INSPECTION STATUS</div>
+                    <div class="status-display" id="statusDisplay">
+                        <div class="status-item">
+                            <span class="status-label">Vehicle:</span>
+                            <span class="status-value">--</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Completed:</span>
+                            <span class="status-value" id="completedCount">0 / 10</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Progress:</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Status:</span>
+                            <span class="status-value" id="statusValue">READY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">📝 INSPECTION ITEMS</div>
+                    <div class="items-legend">
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Headlights</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Taillights</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Brake Lights</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Turn Signals</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Hazard Lights</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Oil Level</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Fuel Level</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Transmission Fluid</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Coolant Level</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-check">✓</span>
+                            <span class="legend-text">Mileage</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
